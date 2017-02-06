@@ -77,9 +77,9 @@ void CoreAPI::init(HardDriver *sDevice, CallBackHandler userRecvCallback, bool u
 
 
   //! @todo simplify code above
-  serialDevice->lockMSG();
+  //serialDevice->lockMSG();
   memset((unsigned char *)&broadcastData, 0, sizeof(broadcastData));
-  serialDevice->freeMSG();
+  //serialDevice->freeMSG();
 
   setup();
 
