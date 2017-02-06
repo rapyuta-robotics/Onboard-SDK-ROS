@@ -6,7 +6,11 @@ project(dji_sdk_lib)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+if(EMBEDDED_FIRMWARE)
+  set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+else()
+  set(CMAKE_CXX_FLAGS "-std=c++11 -fPIC ${CMAKE_CXX_FLAGS}")
+endif()
 ###################################
 ## catkin specific configuration ##
 ###################################
