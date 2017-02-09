@@ -560,6 +560,9 @@ class CoreAPI
   /// Follow Me Mission Control
   void setFollowData(bool value);
 
+  ///  Manually Set HW Interface Version 
+  void setVersionData(VersionData version) {versionData = version;}
+
   /**
    * Initialize serial device
    */
