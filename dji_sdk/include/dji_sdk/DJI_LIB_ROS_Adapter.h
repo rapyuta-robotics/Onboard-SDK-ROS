@@ -82,6 +82,8 @@ class ROSAdapter {
                 p_coreAPI->sendPoll();
                 usleep(1000);
             }
+            // Fix the compilation warning
+            return nullptr;
         }
 
 
