@@ -134,12 +134,12 @@ class HardDriver_Manifold : public HardDriver {
 
 
         void lockMemory() {
-            pthread_mutex_lock(&m_memLock);
+            //pthread_mutex_lock(&m_memLock);
         }
 
 
         void freeMemory() {
-            pthread_mutex_unlock(&m_memLock);
+            //pthread_mutex_unlock(&m_memLock);
         }
 
 
