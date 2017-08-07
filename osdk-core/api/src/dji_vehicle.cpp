@@ -15,8 +15,8 @@
 using namespace DJI;
 using namespace DJI::OSDK;
 
-Vehicle::Vehicle(const char* device, uint32_t baudRate, bool threadSupport)
-  : protocolLayer(NULL)
+Vehicle::Vehicle(Protocol* protocol, ThreadAbstract* vehicleThread, bool threadSupport)
+  : protocolLayer(protocol)
   , subscribe(NULL)
   , broadcast(NULL)
   , control(NULL)
@@ -28,37 +28,11 @@ Vehicle::Vehicle(const char* device, uint32_t baudRate, bool threadSupport)
   , hardSync(NULL)
   , readThread(NULL)
   , callbackThread(NULL)
+  , thisThread(vehicleThread)
+  , threadSupported(threadSupport)
 {
-  if (!device)
-    DERROR("Illegal serial device handle!\n");
-
-  this->threadSupported = threadSupport;
-  this->device          = device;
-  this->baudRate        = baudRate;
-  callbackId            = 0;
+  callbackId = 0;
   ackErrorCode.data     = OpenProtocol::ErrorCode::CommonACK::NO_RESPONSE_ERROR;
-
-  mandatorySetUp();
-  functionalSetUp();
-}
-
-Vehicle::Vehicle(bool threadSupport)
-  : protocolLayer(NULL)
-  , subscribe(NULL)
-  , broadcast(NULL)
-  , control(NULL)
-  , camera(NULL)
-  , mfio(NULL)
-  , moc(NULL)
-  , missionManager(NULL)
-  , hardSync(NULL)
-  , readThread(NULL)
-  , callbackThread(NULL)
-{
-  this->threadSupported = threadSupport;
-  callbackId            = 0;
-
-  mandatorySetUp();
 }
 
 void
@@ -269,12 +243,13 @@ Vehicle::~Vehicle()
 bool
 Vehicle::initOpenProtocol()
 {
-  this->protocolLayer =
-    new (std::nothrow) Protocol(this->device, this->baudRate);
+
   if (this->protocolLayer == 0)
   {
     return false;
   }
+
+  this->protocolLayer->init();
 
   return true;
 }
@@ -283,61 +258,9 @@ Vehicle::initOpenProtocol()
 bool
 Vehicle::initPlatformSupport()
 {
-#ifdef QT
-  if (threadSupported)
-  {
-    OSDKThread* readThreadPtr = new (std::nothrow) OSDKThread(this, 2);
-    if (readThreadPtr == 0)
-    {
-      DERROR("Failed to initialize read thread!\n");
-    }
-    else
-    {
-      QThread* qReadThread = new QThread;
-      readThreadPtr->setQThreadPtr(qReadThread);
-      readThreadPtr->moveToThread(qReadThread);
-      QObject::connect(qReadThread, SIGNAL(started()), readThreadPtr, SLOT(run()));
-      QObject::connect(qReadThread, SIGNAL(finished()), qReadThread, SLOT(deleteLater()));
-      qReadThread->start();
-      this->readThread = readThreadPtr;
-    }
-
-    OSDKThread* cbThreadPtr = new (std::nothrow) OSDKThread(this, 3);
-    if (cbThreadPtr == 0)
-    {
-      DERROR("Failed to initialize callback thread!\n");
-    }
-    else
-    {
-      QThread* qCbThread = new QThread;
-      cbThreadPtr->setQThreadPtr(qCbThread);
-      cbThreadPtr->moveToThread(qCbThread);
-      QObject::connect(qCbThread, SIGNAL(started()), cbThreadPtr, SLOT(run()));
-      QObject::connect(qCbThread, SIGNAL(finished()), qCbThread, SLOT(deleteLater()));
-      qCbThread->start();
-      this->callbackThread = cbThreadPtr;
-    }
-  }
-#elif STM32
   //! Threads not supported by default
   this->readThread = NULL;
   return true;
-#elif defined(__linux__)
-  if (threadSupported)
-  {
-    this->callbackThread = new (std::nothrow) PosixThread(this, 3);
-    if (this->callbackThread == 0)
-    {
-      DERROR("Failed to initialize read callback thread!\n");
-    }
-
-    this->readThread = new (std::nothrow) PosixThread(this, 2);
-    if (this->readThread == 0)
-    {
-      DERROR("Failed to initialize read thread!\n");
-    }
-  }
-#endif
   bool readThreadStatus = readThread->createThread();
   bool cbThreadStatus   = callbackThread->createThread();
   return (readThreadStatus && cbThreadStatus);
@@ -346,18 +269,8 @@ Vehicle::initPlatformSupport()
 bool
 Vehicle::initVersion()
 {
-#if STM32
-  //! Non blocking call for STM32 as it does not support multi-thread
   getDroneVersion();
-  STM32F4::delay_nms(2000);
-#elif defined(QT)
-  //! Non-blocking call for QT sample, thread sync not supported yet
-  getDroneVersion();
-  QThread::msleep(200);
-
-#else
-  ACK::DroneVersion ack = getDroneVersion(wait_timeout);
-#endif
+  thisThread->wait(2000);
   if (this->getFwVersion() == 0)
   {
     return false;
@@ -698,24 +611,12 @@ Vehicle::initGimbal()
     }
 
     // Wait for telemetry data
-#ifdef QT
-    QThread::msleep(200);
-#elif STM32
-    STM32F4::delay_nms(500);
-#else
-    sleep(2);
-#endif
+    thisThread->wait(500);
     subscriptionGimbal =
 	  this->subscribe->getValue<Telemetry::TOPIC_GIMBAL_STATUS>();
 
     this->subscribe->removePackage(0, wait_timeout);
-#ifdef QT
-    QThread::msleep(100);
-#elif STM32
-    STM32F4::delay_nms(500);
-#else
-    sleep(2);
-#endif
+    thisThread->wait(500);
   }
 
   if((this->getFwVersion() != Version::M100_31 &&

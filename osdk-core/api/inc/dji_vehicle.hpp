@@ -34,19 +34,6 @@
 #include "dji_version.hpp"
 #include "dji_virtual_rc.hpp"
 
-/*! Platform includes:
- *  This set of macros figures out which files to include based on your
- * platform.
- */
-
-#ifdef QT
-#include <qt_thread.hpp>
-#elif STM32
-#include <STM32F4DataGuard.h>
-#elif defined(__linux__)
-#include "posix_thread.hpp"
-#endif
-
 namespace DJI
 {
 namespace OSDK
@@ -77,8 +64,7 @@ public:
 #pragma pack()
 
 public:
-  Vehicle(const char* device, uint32_t baudRate, bool threadSupport);
-  Vehicle(bool threadSupport);
+  Vehicle(Protocol* device, ThreadAbstract* vehicleThread, bool threadSupport);
   ~Vehicle();
 
   Protocol*            protocolLayer;
@@ -240,14 +226,13 @@ private:
   ActivateData         accountData;
 
   //! Thread management
+  ThreadAbstract* thisThread;
   Thread* readThread;
   Thread* callbackThread;
   bool    stopCond;
 
   //! Initialization data
   bool        threadSupported;
-  const char* device;
-  uint32_t    baudRate;
 
   //! ACK management
 
@@ -288,12 +273,12 @@ public:
   /*! @brief Initialize all functional Vehicle components
 *  like, Subscription, Broadcast, Control, Gimbal, ect
 */
+  void mandatorySetUp();
   void functionalSetUp();
 
 private:
   /*! @brief Initialize minimal Vehicle components
 */
-  void mandatorySetUp();
   bool initOpenProtocol();
 
   /*! @brief Initialize the right platform-specific implementations

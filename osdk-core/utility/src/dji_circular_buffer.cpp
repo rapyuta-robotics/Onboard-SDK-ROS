@@ -9,6 +9,7 @@
  */
 
 #include "dji_circular_buffer.hpp"
+#include  <string.h>
 
 using namespace DJI;
 using namespace DJI::OSDK;

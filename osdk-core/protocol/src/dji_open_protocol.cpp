@@ -9,55 +9,27 @@
  *
  */
 #include "dji_open_protocol.hpp"
-
-#ifdef STM32
+#include <string.h>
 #include <stdio.h>
-#endif
 
 using namespace DJI;
 using namespace DJI::OSDK;
 
 //! Constructor
-Protocol::Protocol(const char* device, uint32_t baudrate)
+Protocol::Protocol(ThreadAbstract* threadHandle, HardDriver* serialDevice, uint32_t baudrate)
 {
-//! Step 1: Initialize Hardware Driver
-
-//! Step 1.1: Instantiate a hardware driver as per OS
-#ifdef QT
-  QThread* serialEventThread = new QThread;
-  QHardDriver* driver = new QHardDriver(0, device, baudrate);
-  driver->moveToThread(serialEventThread);
-  QObject::connect(serialEventThread, SIGNAL(started()), driver, SLOT(init()));
-  QObject::connect(driver, SIGNAL (finished()), driver, SLOT (deleteLater()));
-
-  QObject::connect(serialEventThread, SIGNAL (finished()), serialEventThread, SLOT (deleteLater()));
-  serialEventThread->start();
-  QThread::msleep(100);
-  this->serialDevice = driver;
-  this->threadHandle = new QThreadManager();
-//! Add correct Qt serial device constructor here
-#elif STM32
-  this->serialDevice = new STM32F4;
-  this->threadHandle = new STM32F4DataGuard;
-#elif defined(__linux__)
-  this->serialDevice = new LinuxSerialDevice(device, baudrate);
-  this->threadHandle = new PosixThreadManager();
-#endif
-
-  //! Step 1.2: Initialize the hardware driver
-#ifndef QT
-  this->serialDevice->init();
-#endif
-  this->threadHandle->init();
-
-  //! Step 2: Initialize the ProtocolLayer
-  init(this->serialDevice, this->serialDevice->getMmu());
+  this->serialDevice = serialDevice;
+  this->threadHandle = threadHandle;
 }
 
 /***************************Init*******************************************/
 void
-Protocol::init(HardDriver* sDevice, MMU* mmuPtr, bool userCallbackThread)
+Protocol::init(bool userCallbackThread)
 {
+  this->serialDevice->init();
+  this->threadHandle->init();
+  HardDriver* sDevice = this->serialDevice;
+  MMU* mmuPtr = this->serialDevice->getMmu();
 
   serialDevice = sDevice;
 
