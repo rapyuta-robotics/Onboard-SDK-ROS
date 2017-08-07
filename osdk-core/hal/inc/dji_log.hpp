@@ -58,12 +58,10 @@ public:
   Log& operator<<(bool val);
   Log& operator<<(short val);
   Log& operator<<(uint16_t val);
-  Log& operator<<(int val);
+  Log& operator<<(int32_t val);
   Log& operator<<(uint32_t val);
-  Log& operator<<(long val);
-  Log& operator<<(unsigned long val);
-  Log& operator<<(long long val);
-  Log& operator<<(unsigned long long val);
+  Log& operator<<(int64_t val);
+  Log& operator<<(uint64_t val);
   Log& operator<<(float val);
   Log& operator<<(double val);
   Log& operator<<(long double val);

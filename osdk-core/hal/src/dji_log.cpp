@@ -102,7 +102,7 @@ Log::operator<<(uint16_t val)
 }
 
 Log&
-Log::operator<<(int val)
+Log::operator<<(int32_t val)
 {
   //! @todo NUMBER_STYLE
   print("%d", val);
@@ -118,34 +118,18 @@ Log::operator<<(uint32_t val)
 }
 
 Log&
-Log::operator<<(long val)
+Log::operator<<(int64_t val)
 {
   //! @todo NUMBER_STYLE
-  print("%ld", val);
+  print("%d", val);
   return *this;
 }
 
 Log&
-Log::operator<<(unsigned long val)
+Log::operator<<(uint64_t val)
 {
   //! @todo NUMBER_STYLE
-  print("%lu", val);
-  return *this;
-}
-
-Log&
-Log::operator<<(long long val)
-{
-  //! @todo NUMBER_STYLE
-  print("%lld", val);
-  return *this;
-}
-
-Log&
-Log::operator<<(unsigned long long val)
-{
-  //! @todo NUMBER_STYLE
-  print("%llu", val);
+  print("%u", val);
   return *this;
 }
 
@@ -162,14 +146,6 @@ Log::operator<<(double val)
 {
   //! @todo NUMBER_STYLE
   print("%lf", val);
-  return *this;
-}
-
-Log&
-Log::operator<<(long double val)
-{
-  //! @todo NUMBER_STYLE
-  print("%Lf", val);
   return *this;
 }
 

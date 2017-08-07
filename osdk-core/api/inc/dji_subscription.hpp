@@ -15,6 +15,7 @@
 #include "dji_open_protocol.hpp"
 #include "dji_telemetry.hpp"
 #include "dji_vehicle_callback.hpp"
+#include  <string.h>
 
 namespace DJI
 {
