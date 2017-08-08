@@ -1,12 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(djiosdk-core)
 
-if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug CACHE STRING
-            "Choose the type of build Debug/Release/Coverage:"
-            FORCE)
-endif ()
-
 # Add module path for <name>.cmake conf files
 set(CURRENT_CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
 
@@ -45,23 +39,12 @@ endif ()
 ## Build ##
 ###########
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-include_directories(
-  api/inc
-  protocol/inc
-  hal/inc
-  utility/inc
-  platform/default/inc
-)
-
 # Use this if more platform is supported
 if (CMAKE_SYSTEM_NAME MATCHES Linux)
   include_directories(
     platform/linux/inc
   )
 endif()
-
 
 ## Declare a C++ library
 FILE(GLOB OSDK_LIB_SRCS
@@ -83,6 +66,16 @@ add_library(${PROJECT_NAME}
   ${OSDK_LIB_SRCS})
 
 target_link_libraries(${PROJECT_NAME} pthread)
+
+## Specify additional locations of header files
+## Your package locations should be listed before other locations
+target_include_directories(${PROJECT_NAME} PUBLIC
+  api/inc
+  protocol/inc
+  hal/inc
+  utility/inc
+  platform/default/inc
+)
 
 ################
 # Installation #
