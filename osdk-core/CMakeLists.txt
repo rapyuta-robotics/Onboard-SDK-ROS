@@ -65,7 +65,9 @@ add_library(${PROJECT_NAME}
   STATIC
   ${OSDK_LIB_SRCS})
 
-target_link_libraries(${PROJECT_NAME} pthread)
+if (CMAKE_SYSTEM_NAME MATCHES Linux OR Darwin)
+  target_link_libraries(${PROJECT_NAME} pthread)
+endif()
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
